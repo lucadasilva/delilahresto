@@ -6,6 +6,7 @@ const User = require("./user");
 const Product = require("./product")
 const jwt = require("jsonwebtoken")
 const expressJwt = require("express-jwt")
+const key = "clave"
 
 app.use(express.json());
 app.use(cors());
@@ -31,46 +32,42 @@ app.post("/login", async function (req, res) {
         username: req.body.username,
         password: req.body.password
     }
+    var userfound = false
+    var passwordfound = false
     var usuarios = 
     await User.findAll({raw: true})
-    console.log(usuarios);
         console.log(newAttempt);
-        if(!newAttempt.username.search("@")){
+        if(!newAttempt.username.includes("@")){
             usuarios.forEach(user => {
             if(newAttempt.username == user.username){
+                userfound = true
                 if(newAttempt.password == user.password){
-                    var token = jwt.sign(
-                        {username: user.username, admin: user.id_admin}, key, {expiresIn: "5m"}
-                    )
-                    console.log(token)
-                    res.json(token)
-                }else{
-                    console.log("contraseña incorrecta");
-                    res.send("wrong password")
+                    passwordfound = true
+                    newAttempt.is_admin = user.is_admin
                 }
-            }else{
-                console.log("usuario incorrecto");
-                res.send("user not found")
             }
         });
         }else {
             usuarios.forEach(user => {
-            if(newAttempt.email == user.email){
+            if(newAttempt.username == user.email){
+                userfound = true
                 if(newAttempt.password == user.password){
-                    var token = jwt.sign(
-                        {username: user.username, admin: user.id_admin}, key, {expiresIn: "5m"}
+                    passwordfound = true
+                    return
+                }
+            }
+        })
+        }
+        if(userfound == true && passwordfound==true){
+            var token = jwt.sign(
+                        {username: newAttempt.username, admin: newAttempt.is_admin}, key, {expiresIn: "5m"}
                     )
                     console.log(token)
                     res.json(token)
-                }else{
-                    console.log("contraseña incorrecta");
-                    res.send("wrong password")
-                }
-            }else{
-                console.log("usuario incorrecto");
-                res.send("user not found")
-            }
-        })
+        }else if(userfound==true && passwordfound==false){
+            res.json("wrong password")
+        }else{
+            res.json("user not found")
         }
 })
 
@@ -101,3 +98,19 @@ app.get("/menu", async function (req, res) {
     res.send(respuesta)
 })
 });
+app.post("/orders", async function (req, res){
+
+    var totalPrice; 
+    req.body.products.forEach(product=>{
+            totalPrice += product.price
+        })
+    var newOrder = await Order.create({
+        products_description: req.body.products_description,  //hacer parecido al totalprice para agregar varios prodc
+        payment_method: req.body.payment_method,
+        user_id: req.body.user_id,
+        delivery_address: req.body.delivery_address,
+        products: req.body.products,
+        total: totalPrice
+    })
+
+})
