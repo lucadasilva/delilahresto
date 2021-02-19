@@ -27,6 +27,9 @@ app.post("/register", async function(req, res){
     })
     .catch((error)=>console.error(error))
 });
+
+
+// usar el where
 app.post("/login", async function (req, res) {
     var newAttempt = {
         username: req.body.username,
@@ -65,12 +68,13 @@ app.post("/login", async function (req, res) {
                     console.log(token)
                     res.json(token)
         }else if(userfound==true && passwordfound==false){
-            res.json("wrong password")
+            res.json("wrong password") // añadir status 401
         }else{
-            res.json("user not found")
+            res.json("user not found") // 401
         }
 })
 
+// no necesario
 app.get("/users", async function (req, res) {
     User.findAll({raw: true})
     .then((respuesta)=>{console.log(respuesta);
@@ -112,5 +116,4 @@ app.post("/orders", async function (req, res){
         products: req.body.products,
         total: totalPrice
     })
-
 })
