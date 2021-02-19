@@ -4,6 +4,7 @@ const cors = require("cors");
 const conn = require("./connection");
 const User = require("./user");
 const Product = require("./product")
+const Order = require("./order")
 const jwt = require("jsonwebtoken")
 const expressJwt = require("express-jwt")
 const key = "clave"
@@ -27,7 +28,6 @@ app.post("/register", async function(req, res){
     })
     .catch((error)=>console.error(error))
 });
-
 
 // usar el where
 app.post("/login", async function (req, res) {
@@ -66,11 +66,11 @@ app.post("/login", async function (req, res) {
                         {username: newAttempt.username, admin: newAttempt.is_admin}, key, {expiresIn: "5m"}
                     )
                     console.log(token)
-                    res.json(token)
+                    res.status(200).json(token)
         }else if(userfound==true && passwordfound==false){
-            res.json("wrong password") // añadir status 401
+            res.status(401).json("wrong password")
         }else{
-            res.json("user not found") // 401
+            res.status(401).json("user not found")
         }
 })
 
@@ -98,8 +98,8 @@ app.post("/products", async function(req, res){
 
 app.get("/menu", async function (req, res) {
     Product.findAll({raw: true})
-    .then((respuesta)=>{console.log(respuesta);
-    res.send(respuesta)
+    .then((productList)=>{
+    res.json(productList)
 })
 });
 app.post("/orders", async function (req, res){
