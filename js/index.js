@@ -39,7 +39,6 @@ app.post("/login", async function (req, res) {
     var passwordfound = false
     var usuarios = 
     await User.findAll({raw: true})
-        console.log(newAttempt);
         if(!newAttempt.username.includes("@")){
             usuarios.forEach(user => {
             if(newAttempt.username == user.username){
@@ -65,7 +64,6 @@ app.post("/login", async function (req, res) {
             var token = jwt.sign(
                         {username: newAttempt.username, admin: newAttempt.is_admin}, key, {expiresIn: "5m"}
                     )
-                    console.log(token)
                     res.status(200).json(token)
         }else if(userfound==true && passwordfound==false){
             res.status(401).json("wrong password")
@@ -77,9 +75,7 @@ app.post("/login", async function (req, res) {
 // no necesario
 app.get("/users", async function (req, res) {
     User.findAll({raw: true})
-    .then((respuesta)=>{console.log(respuesta);
-    res.send(respuesta)
-})
+    .then((userList)=>{res.send(userList)})
 });
 
 app.post("/products", async function(req, res){
@@ -90,20 +86,15 @@ app.post("/products", async function(req, res){
         description: req.body.description,
         is_disabled: req.body.is_disabled,
     })
-    .then(function(createdUser) {res.send(createdUser)
-    console.log(createdUser);
-    })
+    .then((createdProduct)=>{res.json(createdProduct)})
     .catch((error)=>console.error(error))
 });
 
 app.get("/menu", async function (req, res) {
     Product.findAll({raw: true})
-    .then((productList)=>{
-    res.json(productList)
-})
+    .then((productList)=>{res.json(productList)})
 });
 app.post("/orders", async function (req, res){
-
     var totalPrice; 
     req.body.products.forEach(product=>{
             totalPrice += product.price
@@ -113,7 +104,6 @@ app.post("/orders", async function (req, res){
         payment_method: req.body.payment_method,
         user_id: req.body.user_id,
         delivery_address: req.body.delivery_address,
-        products: req.body.products,
         total: totalPrice
     })
 })
