@@ -2,7 +2,7 @@ const conn = require("./connection");
 const Sequelize = require("sequelize");
 
 const Order = conn.define("orders", {
-    id: {
+    order_id: {
         type: Sequelize.DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -16,7 +16,16 @@ const Order = conn.define("orders", {
         type: Sequelize.DataTypes.INTEGER,
         foreignKey: true
     },
-    delivery_address: Sequelize.DataTypes.TEXT
+    delivery_address: Sequelize.DataTypes.TEXT,
+    createdAt: {
+        field: 'created_at',
+        type: Sequelize.DATE,
+    },
+    updatedAt: {
+        field: 'updated_at',
+        type: Sequelize.DATE,
+    }
+
 },{}
 );
 
