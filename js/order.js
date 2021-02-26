@@ -7,9 +7,8 @@ const Order = conn.define("orders", {
         primaryKey: true,
         autoIncrement: true
     },
-    status: Sequelize.DataTypes.INTEGER,
+    status: Sequelize.DataTypes.TEXT,
     date: Sequelize.DataTypes.DATE,
-    products_description: Sequelize.DataTypes.TEXT,  //foreign key?
     payment_method: Sequelize.DataTypes.TEXT,
     total: Sequelize.DataTypes.FLOAT,
     user_id: {
@@ -28,5 +27,6 @@ const Order = conn.define("orders", {
 
 },{}
 );
+
 
 module.exports = Order

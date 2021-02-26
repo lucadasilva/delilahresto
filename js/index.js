@@ -5,7 +5,7 @@ const conn = require("./connection");
 const User = require("./user");
 const Product = require("./product")
 const Order = require("./order")
-const SelectedProduct = require("./selected-product")
+const OrderProduct = require("./order-product")
 const jwt = require("jsonwebtoken")
 const expressJwt = require("express-jwt")
 const Sequelize = require("sequelize");
@@ -31,7 +31,7 @@ app.post("/register", async function(req, res){
     .catch((error)=>console.error(error))
 });
 
-// usar el where
+
 app.post("/login", async function (req, res) {
     var newAttempt = {
         username: req.body.username,
@@ -111,6 +111,8 @@ app.get("/menu", async function (req, res) {
     Product.findAll({raw: true})
     .then((productList)=>{res.json(productList)})
 });
+
+
 app.post("/orders", async function (req, res){
     /*var totalPrice; 
     req.body.products.forEach(product=>{
@@ -118,23 +120,19 @@ app.post("/orders", async function (req, res){
         })*/
 
     var newOrder = await Order.create({
-        user_id: req.body.user_id
-    }).then((createdOrder)=>{res.json(createdOrder)})
-
-     
-    
-    /*var finalOrder = await Order.create({
-        products_description: req.body.products_description,  //hacer parecido al totalprice para agregar varios prodc
-        payment_method: req.body.payment_method,
         user_id: req.body.user_id,
-        delivery_address: req.body.delivery_address,
-        total: totalPrice
-    })*/
-});
-app.post("/selected-products", async function (req, res){
-    var selectedProducts = await SelectedProduct.create({
-        order_id: createdOrder.order_id,
-        product_id: req.body.product_id,
-        user_id: createdOrder.user_id
-    }).then((createdSelection)=>{res.json(createdSelection)})
+        payment_method: req.body.payment_method,
+        delivery_address: req.body.delivery_address
+    }).then((createdOrder)=>{agregarProductosOrden(req.body.products, createdOrder.order_id)
+        res.json(createdOrder)})
+
+    async function agregarProductosOrden(productos, orderId){
+        await productos.forEach(product => {
+            var orderProducts = OrderProduct.create({
+            order_id: orderId,
+            product_id: product.product_id,
+            quantity: product.quantity
+            })
+        });
+    }
 });
