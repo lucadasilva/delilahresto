@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(cors());
 app.listen(3000, () => console.log("server ok.."));
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////                 PRODUCTS                     //////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +34,7 @@ app.post("/products", async function (req, res) {
     })
     .catch((error) => console.error(error));
 });
-app.get("/products", async function (req, res) {
+app.get("/products", function (req, res) {
   var product = Product.findAll({ raw: true }).then((productList) =>
     res.json(productList)
   );
@@ -49,7 +48,7 @@ app.get("/products/:product_id", function (req, res) {
     res.send(productFound);
   });
 });
-app.delete("/products/:product_id", async function (req, res) {
+app.patch("/products/:product_id", function (req, res) {
   Product.update({ where: { product_id: req.params.product_id } }).then(
     (eliminados) => {
       if (eliminados > 0) {
@@ -109,39 +108,6 @@ app.post("/login", async function (req, res) {
       res.status(401).json("wrong password");
     }
   }
-
-  /*
-        if(!newAttempt.username.includes("@")){
-            usuarios.forEach(user => {
-            if(newAttempt.username == user.username){
-                userfound = true
-                if(newAttempt.password == user.password){
-                    passwordfound = true
-                    newAttempt.is_admin = user.is_admin
-                }
-            }
-        });
-        }else {
-            usuarios.forEach(user => {
-            if(newAttempt.username == user.email){
-                userfound = true
-                if(newAttempt.password == user.password){
-                    passwordfound = true
-                    return
-                }
-            }
-        })
-        }
-        if(userfound == true && passwordfound==true){
-            var token = jwt.sign(
-                        {username: newAttempt.username, admin: newAttempt.is_admin}, key, {expiresIn: "5m"}
-                    )
-                    res.status(200).json(token)
-        }else if(userfound==true && passwordfound==false){
-            res.status(401).json("wrong password")
-        }else{
-            res.status(401).json("user not found")
-        }*/
 });
 // get userlist not required
 app.get("/users", async function (req, res) {
@@ -154,20 +120,26 @@ app.get("/users/:id", function (req, res) {
     raw: true,
     where: { id: req.params.id },
   }).then((userFound) => {
-    console.log(userFound);
-    res.send(userFound);
+    if (userFound.length < 1) {
+      console.log(userFound.length);
+      res.status(404).send("user not found"); /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    } else {
+      console.log(userFound);
+      res.status(200).send(userFound);
+    }
   });
 });
 app.delete("/users/:id", async function (req, res) {
-  User.update({ where: { id: req.params.id } }).then(
-    (eliminados) => {
-      if (eliminados > 0) {
-        res.status(200, "user deleted");
-      } else {
-        res.status(404, "user not found");
-      }
+  User.update(
+    { is_disabled: true },
+    { where: { id: req.params.id.split(",") } }
+  ).then((eliminados) => {
+    if (eliminados > 0) {
+      res.status(200).send(`${eliminados} users have been disabled`);
+    } else {
+      res.status(404).send("user not found");
     }
-  );
+  });
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +182,7 @@ app.post("/orders", async function (req, res) {
   }
 });
 app.get("/orders", async function (req, res) {
-  var orderList = await Order.findAll({
+  await Order.findAll({
     raw: true,
   }).then(async (orderListed) => {
     var listOfOrderProducts = await OrderProduct.findAll({ raw: true });
