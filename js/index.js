@@ -224,3 +224,23 @@ app.get("/orders", async function (req, res) {
     res.json(orderListed);
   });
 });
+app.get("/orders/:order_id", function (req, res) {
+  Order.findAll({
+    raw: true,
+    where: { order_id: req.params.order_id },
+  }).then((orderFound) => {
+    console.log(orderFound);
+    res.send(orderFound);
+  });
+});
+app.delete("/orders/:order_id", async function (req, res) {
+  Order.update({ where: { order_id: req.params.order_id } }).then(
+    (eliminados) => {
+      if (eliminados > 0) {
+        res.status(200, "order deleted");
+      } else {
+        res.status(404, "order not found");
+      }
+    }
+  );
+});
