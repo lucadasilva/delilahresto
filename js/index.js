@@ -104,20 +104,6 @@ app.get("/users", async function (req, res) {
   });
 });
 
-app.post("/products", async function (req, res) {
-  var products = await Product.create({
-    name: req.body.name,
-    price: req.body.price,
-    img_url: req.body.img_url,
-    description: req.body.description,
-    is_disabled: req.body.is_disabled,
-  })
-    .then((createdProduct) => {
-      res.json(createdProduct);
-    })
-    .catch((error) => console.error(error));
-});
-
 app.get("/menu", async function (req, res) {
   Product.findAll({ raw: true }).then((productList) => {
     res.json(productList);
@@ -125,15 +111,25 @@ app.get("/menu", async function (req, res) {
 });
 
 app.post("/orders", async function (req, res) {
-  /*var totalPrice; 
-    req.body.products.forEach(product=>{
-            totalPrice += product.price
-        })*/
+  var productList = await Product.findAll({
+    raw: true,
+  });
+  console.log(productList);
+  var totalPrice = 0;
+  req.body.products.forEach((orderedProduct) => {
+    let selectedProducts = productList.find(
+      (product) => product.product_id == orderedProduct.product_id
+    );
+    console.log(selectedProducts);
+    totalPrice += selectedProducts.price * orderedProduct.quantity;
+    console.log(totalPrice);
+  });
 
   var newOrder = await Order.create({
     user_id: req.body.user_id,
     payment_method: req.body.payment_method,
     delivery_address: req.body.delivery_address,
+    total: totalPrice,
   }).then((createdOrder) => {
     agregarProductosOrden(req.body.products, createdOrder.order_id);
     res.json(createdOrder);
@@ -151,28 +147,89 @@ app.post("/orders", async function (req, res) {
 });
 
 // hacer get de orders
-app.get("/orders", async function (req, res) {
-  Order.findAll({ raw: true }).then((orderList) => {
-    res.json(getOrderProducts(orderList));
-  });
 
-  async function getOrderProducts(orderList) {
-    var findOrderList = await orderList.forEach((order) => {
-      OrderProduct.findAll({
-        raw: true,
-        where: {
-          order_id: order.order_id,
-        },
-      }).then((orderProductList) => {
-        order.products = orderProductList;
-        console.log(order);
-      });
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+app.get("/orders", async function (req, res) {
+  var orderList = await Order.findAll({
+    raw: true,
+  }).then(async (orderListed) => {
+    var listOfOrderProducts = await OrderProduct.findAll({ raw: true });
+    console.log(listOfOrderProducts);
+    orderListed.forEach((order) => {
+      order.products = listOfOrderProducts.filter(
+        (products) => products.order_id == order.order_id
+      );
     });
-    console.log(orderList);
-    Promise.all([findOrderList]).then(console.log(orderList));
-  }
+    console.log(orderListed);
+    res.json(orderListed);
+  });
 });
+
+//   async function getOrderProducts(id) {
+//     var processedList = await ordersListed.forEach((order) => {
+//       var orderProductList = OrderProduct.findAll({
+//         raw: true,
+//         where: {
+//           order_id: order.order_id,
+//         },
+//       }).then((orderProductList) => {
+//         order.products = orderProductList;
+//         console.log("dentro del foreach");
+//       });
+//     });
+//     console.log("antes del return");
+//     return processedList;
+//   }
+// });
+
 // hacer get de orderId
+
 //crud de prod
+
+app.post("/products", async function (req, res) {
+  var products = await Product.create({
+    name: req.body.name,
+    price: req.body.price,
+    img_url: req.body.img_url,
+    description: req.body.description,
+    is_disabled: req.body.is_disabled,
+  })
+    .then((createdProduct) => {
+      res.json(createdProduct);
+    })
+    .catch((error) => console.error(error));
+});
+
+app.get("/products", async function (req, res) {
+  var product = Product.findAll({ raw: true }).then((listOfProducts) =>
+    res.json(listOfProducts)
+  );
+});
+
+////////////////////////////////////////////////////////////////
+
+app.get("/products/:product_id", function (req, res) {
+  Product.findAll({
+    raw: true,
+    where: { product_id: req.params.product_id },
+  }).then((productFound) => {
+    console.log(productFound);
+    res.send(productFound);
+  });
+});
+
+app.delete("/products/:product_id", async function (req, res) {
+  Product.update({ where: { product_id: req.params.product_id } }).then(
+    (eliminados) => {
+      if (eliminados > 0) {
+        res.status(200);
+      } else {
+        res.status(404);
+      }
+    }
+  );
+});
+
 //crud de users
 //crud de orders
